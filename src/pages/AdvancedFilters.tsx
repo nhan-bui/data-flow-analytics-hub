@@ -189,44 +189,60 @@ const AdvancedFilters: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <Label htmlFor="year">Year</Label>
-              <Input 
+              <select 
                 id="year" 
-                type="number" 
-                placeholder="e.g. 2025" 
-                min="2000" 
-                max="2030"
-                value={selectedYear || ''}
+                value={selectedYear === null ? '' : selectedYear.toString()}
                 onChange={(e) => setSelectedYear(e.target.value ? parseInt(e.target.value) : null)}
-                className="mt-2"
-              />
+                className="w-full mt-2 p-2 border border-gray-300 rounded-md"
+              >
+                <option value="">All Years</option>
+                {[2023, 2024, 2025, 2026, 2027].map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
             </div>
             <div>
               <Label htmlFor="quarter">Quarter</Label>
-              <Input 
+              <select 
                 id="quarter" 
-                type="number" 
-                placeholder="1-4" 
-                min="1" 
-                max="4"
-                value={selectedQuarter || ''}
+                value={selectedQuarter === null ? '' : selectedQuarter.toString()}
                 onChange={(e) => setSelectedQuarter(e.target.value ? parseInt(e.target.value) : null)}
-                className="mt-2"
+                className="w-full mt-2 p-2 border border-gray-300 rounded-md"
                 disabled={!selectedYear}
-              />
+              >
+                <option value="">All Quarters</option>
+                {[1, 2, 3, 4].map(quarter => (
+                  <option key={quarter} value={quarter}>Quarter {quarter}</option>
+                ))}
+              </select>
             </div>
             <div>
               <Label htmlFor="month">Month</Label>
-              <Input 
+              <select 
                 id="month" 
-                type="number" 
-                placeholder="1-12" 
-                min="1" 
-                max="12"
-                value={selectedMonth || ''}
+                value={selectedMonth === null ? '' : selectedMonth.toString()}
                 onChange={(e) => setSelectedMonth(e.target.value ? parseInt(e.target.value) : null)}
-                className="mt-2"
+                className="w-full mt-2 p-2 border border-gray-300 rounded-md"
                 disabled={!selectedYear}
-              />
+              >
+                <option value="">All Months</option>
+                {[
+                  { value: 1, name: "January" },
+                  { value: 2, name: "February" },
+                  { value: 3, name: "March" },
+                  { value: 4, name: "April" },
+                  { value: 5, name: "May" },
+                  { value: 6, name: "June" },
+                  { value: 7, name: "July" },
+                  { value: 8, name: "August" },
+                  { value: 9, name: "September" },
+                  { value: 10, name: "October" },
+                  { value: 11, name: "November" },
+                  { value: 12, name: "December" }
+                ].map(month => (
+                  <option key={month.value} value={month.value}>{month.name}</option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
@@ -247,26 +263,37 @@ const AdvancedFilters: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <Label htmlFor="customerType">Customer Type</Label>
-                <Input 
+                <select 
                   id="customerType" 
-                  placeholder="Enter customer type" 
                   value={customerType}
                   onChange={(e) => setCustomerType(e.target.value)}
-                  className="mt-2"
-                />
+                  className="w-full mt-2 p-2 border border-gray-300 rounded-md"
+                >
+                  <option value="">All Customer Types</option>
+                  <option value="Retail">Retail</option>
+                  <option value="Wholesale">Wholesale</option>
+                  <option value="Corporate">Corporate</option>
+                  <option value="Premium">Premium</option>
+                </select>
               </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <Label htmlFor="storeCode">Store Code</Label>
-                <Input 
+                <select 
                   id="storeCode" 
-                  placeholder="Enter store code" 
                   value={storeCode}
                   onChange={(e) => setStoreCode(e.target.value)}
-                  className="mt-2"
-                />
+                  className="w-full mt-2 p-2 border border-gray-300 rounded-md"
+                >
+                  <option value="">All Store Codes</option>
+                  <option value="ST001">ST001</option>
+                  <option value="ST002">ST002</option>
+                  <option value="ST003">ST003</option>
+                  <option value="ST004">ST004</option>
+                  <option value="ST005">ST005</option>
+                </select>
               </div>
             </div>
           )}
@@ -282,18 +309,36 @@ const AdvancedFilters: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <Label htmlFor="itemCode">Item Code</Label>
-              <Input 
+              <select 
                 id="itemCode" 
-                placeholder="Enter item code" 
                 value={itemCode}
                 onChange={(e) => setItemCode(e.target.value)}
-                className="mt-2"
-              />
+                className="w-full mt-2 p-2 border border-gray-300 rounded-md"
+              >
+                <option value="">All Items</option>
+                <option value="IT001">IT001</option>
+                <option value="IT002">IT002</option>
+                <option value="IT003">IT003</option>
+                <option value="IT004">IT004</option>
+                <option value="IT005">IT005</option>
+              </select>
             </div>
             
             <div>
               <Label className="block mb-2">Size</Label>
               <div className="grid grid-cols-3 gap-2">
+                <div key="all-sizes" className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="all-sizes" 
+                    checked={selectedSizes.length === 0}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedSizes([]);
+                      }
+                    }}
+                  />
+                  <Label htmlFor="all-sizes" className="text-sm">All Sizes</Label>
+                </div>
                 {availableSizes.map(size => (
                   <div key={size} className="flex items-center space-x-2">
                     <Checkbox 
@@ -310,6 +355,18 @@ const AdvancedFilters: React.FC = () => {
             <div>
               <Label className="block mb-2">Weight Range</Label>
               <div className="grid grid-cols-2 gap-2">
+                <div key="all-weights" className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="all-weights" 
+                    checked={selectedWeightRanges.length === 0}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedWeightRanges([]);
+                      }
+                    }}
+                  />
+                  <Label htmlFor="all-weights" className="text-sm">All Weights</Label>
+                </div>
                 {availableWeightRanges.map(range => (
                   <div key={range} className="flex items-center space-x-2">
                     <Checkbox 
@@ -341,7 +398,7 @@ const AdvancedFilters: React.FC = () => {
                 onChange={(e) => setSelectedState(e.target.value)}
                 className="w-full mt-2 p-2 border border-gray-300 rounded-md"
               >
-                <option value="">Select a state</option>
+                <option value="">All States</option>
                 {availableStates.map(state => (
                   <option key={state} value={state}>{state}</option>
                 ))}
@@ -356,7 +413,7 @@ const AdvancedFilters: React.FC = () => {
                 className="w-full mt-2 p-2 border border-gray-300 rounded-md"
                 disabled={!selectedState}
               >
-                <option value="">Select a city</option>
+                <option value="">All Cities</option>
                 {selectedState && availableCities[selectedState as keyof typeof availableCities]?.map(city => (
                   <option key={city} value={city}>{city}</option>
                 ))}
