@@ -12,13 +12,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar } from '@/components/ui/calendar';
 import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate } from 'react-router-dom';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarClock, Users, Package, Globe, Store, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
 
 const AdvancedFilters: React.FC = () => {
   const navigate = useNavigate();
@@ -28,7 +25,6 @@ const AdvancedFilters: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [selectedQuarter, setSelectedQuarter] = useState<number | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   
   // Customer/Store dimension states
   const [customerType, setCustomerType] = useState<string>('');
@@ -190,7 +186,7 @@ const AdvancedFilters: React.FC = () => {
             <h2 className="text-2xl font-semibold text-gray-800">Time Dimension</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <Label htmlFor="year">Year</Label>
               <Input 
@@ -231,28 +227,6 @@ const AdvancedFilters: React.FC = () => {
                 className="mt-2"
                 disabled={!selectedYear}
               />
-            </div>
-            <div>
-              <Label>Pick Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start text-left mt-2"
-                  >
-                    {selectedDate ? format(selectedDate, 'PPP') : <span>Select a date...</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    initialFocus
-                    className="p-3 pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
             </div>
           </div>
         </div>
