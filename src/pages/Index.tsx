@@ -12,13 +12,14 @@ import FilterCard from '@/components/FilterCard';
 import SummaryCard from '@/components/SummaryCard';
 import DataVisualization from '@/components/DataVisualization';
 import { ChartType, getChartTypeDisplay, getChartTitle } from '@/utils/chartUtils';
-
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, SlidersHorizontal } from 'lucide-react';
 
 const Index = () => {
+  const navigate = useNavigate();
   // State for data type (sales/inventory)
   const [dataType, setDataType] = useState<'sales' | 'inventory'>('sales');
   
@@ -34,6 +35,34 @@ const Index = () => {
   const [chartType, setChartType] = useState<ChartType>('table');
   const [visualizationData, setVisualizationData] = useState<any[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Check for advanced filters on component mount
+  useEffect(() => {
+    const savedFilters = localStorage.getItem('advancedFilters');
+    if (savedFilters) {
+      try {
+        const filters = JSON.parse(savedFilters);
+        setDataType(filters.dataType);
+        setSelections({
+          time: filters.time,
+          customer: filters.customer,
+          item: filters.item,
+          geo: filters.geo
+        });
+        // Clear the stored filters
+        localStorage.removeItem('advancedFilters');
+        // Automatically fetch data with the applied filters
+        fetchVisualizationData(filters.dataType, {
+          time: filters.time,
+          customer: filters.customer,
+          item: filters.item,
+          geo: filters.geo
+        });
+      } catch (error) {
+        console.error("Error parsing saved filters:", error);
+      }
+    }
+  }, []);
   
   // When data type changes, reset customer dimension
   useEffect(() => {
@@ -73,17 +102,17 @@ const Index = () => {
   };
   
   // Apply filters and fetch data
-  const fetchVisualizationData = async () => {
+  const fetchVisualizationData = async (type = dataType, selectedDimensions = selections) => {
     setIsLoading(true);
     
     try {
       // Create request object
       const request: DataRequest = {
-        dataType,
-        time: TIME_DIMENSIONS[selections.time.level].id,
-        customer: CUSTOMER_DIMENSIONS[dataType][selections.customer.level].id,
-        item: ITEM_DIMENSIONS[selections.item.level].id,
-        geo: GEO_DIMENSIONS[selections.geo.level].id
+        dataType: type,
+        time: TIME_DIMENSIONS[selectedDimensions.time.level].id,
+        customer: CUSTOMER_DIMENSIONS[type][selectedDimensions.customer.level].id,
+        item: ITEM_DIMENSIONS[selectedDimensions.item.level].id,
+        geo: GEO_DIMENSIONS[selectedDimensions.geo.level].id
       };
       
       // Fetch data
@@ -157,7 +186,7 @@ const Index = () => {
       </p>
       
       {/* Data Type Tabs */}
-      <div className="grid grid-cols-2 gap-2 mb-6">
+      <div className="grid grid-cols-3 gap-2 mb-6">
         <Button 
           onClick={() => handleDataTypeChange('sales')}
           variant={dataType === 'sales' ? 'default' : 'outline'}
@@ -171,6 +200,14 @@ const Index = () => {
           className="py-6"
         >
           📦 Inventory Data
+        </Button>
+        <Button 
+          onClick={() => navigate('/advanced-filters')}
+          variant="secondary"
+          className="py-6"
+        >
+          <SlidersHorizontal className="mr-2 h-5 w-5" />
+          Advanced Filters
         </Button>
       </div>
       
@@ -234,7 +271,7 @@ const Index = () => {
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="col-span-2">
           <Button 
-            onClick={fetchVisualizationData} 
+            onClick={() => fetchVisualizationData()}
             disabled={isLoading}
             className="w-full py-6"
           >
