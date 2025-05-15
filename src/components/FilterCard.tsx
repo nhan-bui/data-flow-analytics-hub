@@ -56,11 +56,11 @@ export const FilterCard: React.FC<FilterCardProps> = ({
   // Get the border color based on the type
   const getBorderColor = () => {
     switch (type) {
-      case 'time': return 'border-time-main';
-      case 'customer': return 'border-customer-main';
-      case 'item': return 'border-item-main';
-      case 'geo': return 'border-geo-main';
-      default: return 'border-gray-300';
+      case 'time': return 'border-l-time-main';
+      case 'customer': return 'border-l-customer-main';
+      case 'item': return 'border-l-item-main';
+      case 'geo': return 'border-l-geo-main';
+      default: return 'border-l-gray-300';
     }
   };
   
@@ -80,27 +80,40 @@ export const FilterCard: React.FC<FilterCardProps> = ({
     }
   };
 
+  // Get background color based on the type
+  const getBackgroundColor = () => {
+    switch (type) {
+      case 'time': return 'bg-white';
+      case 'customer': return 'bg-white';
+      case 'item': return 'bg-white';
+      case 'geo': return 'bg-white';
+      default: return 'bg-white';
+    }
+  };
+
   return (
-    <div className={`filter-card ${getBorderColor()}`}>
-      <div className="flex items-center gap-2 mb-1">
-        {getIcon()}
-        <h3 className="text-base font-semibold">{title}</h3>
+    <div className={`flex flex-col justify-between h-[140px] p-4 rounded-md border-l-4 shadow-sm ${getBorderColor()} ${getBackgroundColor()}`}>
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          {getIcon()}
+          <h3 className="text-base font-semibold">{title}</h3>
+        </div>
+        
+        <Select value={value} onValueChange={onChange}>
+          <SelectTrigger className="border border-gray-200 h-9 text-sm w-full">
+            <SelectValue placeholder="Select..." />
+          </SelectTrigger>
+          <SelectContent className="bg-white">
+            {Object.entries(options).map(([key, { display }]) => (
+              <SelectItem key={key} value={key} className="text-sm">
+                {display}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="border border-gray-200 h-9 text-sm">
-          <SelectValue placeholder="Select..." />
-        </SelectTrigger>
-        <SelectContent>
-          {Object.entries(options).map(([key, { display }]) => (
-            <SelectItem key={key} value={key} className="text-sm">
-              {display}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      
-      <div className="mt-auto">
+      <div>
         <span className={`text-xs font-medium py-1 px-3 rounded-full inline-block ${getBadgeStyles()}`}>
           Current: {currentDisplay}
         </span>
