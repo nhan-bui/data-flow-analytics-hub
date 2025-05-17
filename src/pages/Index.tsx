@@ -407,9 +407,9 @@ const Index = () => {
                                   <SelectValue placeholder={`All ${column} values`} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="">All</SelectItem>
+                                  <SelectItem key={`${column}-all`} value="_all">All</SelectItem>
                                   {uniqueValues.map(value => (
-                                    <SelectItem key={value} value={value}>
+                                    <SelectItem key={`${column}-${value}`} value={value}>
                                       {value}
                                     </SelectItem>
                                   ))}
