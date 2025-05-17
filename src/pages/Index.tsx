@@ -177,6 +177,21 @@ const Index = () => {
   // Generate chart title
   const chartTitle = getChartTitle(dataType, selections);
 
+  // Handle navigation to advanced filters
+  const handleAdvancedFiltersClick = () => {
+    if (!visualizationData) {
+      toast.warning("Please apply filters first to see available columns");
+      return;
+    }
+    
+    // Store current data type and data in localStorage
+    localStorage.setItem('currentDataType', dataType);
+    localStorage.setItem('currentColumns', JSON.stringify(Object.keys(visualizationData[0] || {})));
+    
+    // Navigate to advanced filters
+    navigate('/advanced-filters');
+  };
+
   return (
     <div className="container py-8 px-4 mx-auto max-w-7xl">
       {/* Header */}
@@ -202,9 +217,10 @@ const Index = () => {
           📦 Inventory Data
         </Button>
         <Button 
-          onClick={() => navigate('/advanced-filters')}
+          onClick={handleAdvancedFiltersClick}
           variant="secondary"
           className="py-6"
+          disabled={!visualizationData}
         >
           <SlidersHorizontal className="mr-2 h-5 w-5" />
           Advanced Filters
