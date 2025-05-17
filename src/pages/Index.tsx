@@ -12,14 +12,18 @@ import FilterCard from '@/components/FilterCard';
 import SummaryCard from '@/components/SummaryCard';
 import DataVisualization from '@/components/DataVisualization';
 import { ChartType, getChartTypeDisplay, getChartTitle } from '@/utils/chartUtils';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Loader2, SlidersHorizontal } from 'lucide-react';
+import { Loader2, SlidersHorizontal, Filter } from 'lucide-react';
+import { 
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger
+} from "@/components/ui/collapsible";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Index = () => {
-  const navigate = useNavigate();
   // State for data type (sales/inventory)
   const [dataType, setDataType] = useState<'sales' | 'inventory'>('sales');
   
@@ -35,6 +39,11 @@ const Index = () => {
   const [chartType, setChartType] = useState<ChartType>('table');
   const [visualizationData, setVisualizationData] = useState<any[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // State for advanced filters
+  const [showColumnFilters, setShowColumnFilters] = useState(false);
+  const [columnFilterValues, setColumnFilterValues] = useState<{[key: string]: string}>({});
+  const [availableColumns, setAvailableColumns] = useState<string[]>([]);
   
   // Check for advanced filters on component mount
   useEffect(() => {
@@ -75,7 +84,24 @@ const Index = () => {
     }));
     // Reset visualization data too
     setVisualizationData(null);
+    // Reset column filters
+    setShowColumnFilters(false);
+    setColumnFilterValues({});
   }, [dataType]);
+  
+  // Update available columns when data changes
+  useEffect(() => {
+    if (visualizationData && visualizationData.length > 0) {
+      setAvailableColumns(Object.keys(visualizationData[0]));
+      
+      // Initialize column filter values to empty strings
+      const initialFilterValues: {[key: string]: string} = {};
+      Object.keys(visualizationData[0]).forEach(column => {
+        initialFilterValues[column] = '';
+      });
+      setColumnFilterValues(initialFilterValues);
+    }
+  }, [visualizationData]);
   
   // Handle dimension selection change
   const handleDimensionChange = (dimension: 'time' | 'customer' | 'item' | 'geo', value: string) => {
@@ -132,6 +158,42 @@ const Index = () => {
     }
   };
   
+  // Handle column filter change
+  const handleColumnFilterChange = (column: string, value: string) => {
+    setColumnFilterValues({
+      ...columnFilterValues,
+      [column]: value
+    });
+  };
+  
+  // Apply column filters to visualizationData
+  const getFilteredData = () => {
+    if (!visualizationData) return null;
+    
+    return visualizationData.filter(row => {
+      return Object.entries(columnFilterValues).every(([column, filterValue]) => {
+        if (!filterValue) return true; // Skip empty filters
+        
+        const cellValue = String(row[column]).toLowerCase();
+        return cellValue.includes(filterValue.toLowerCase());
+      });
+    });
+  };
+  
+  // Get unique values for a column
+  const getUniqueValues = (column: string) => {
+    if (!visualizationData) return [];
+    
+    const values = new Set<string>();
+    visualizationData.forEach(row => {
+      if (row[column] !== undefined && row[column] !== null) {
+        values.add(String(row[column]));
+      }
+    });
+    
+    return Array.from(values).sort();
+  };
+  
   // Generate breadcrumb elements
   const generateBreadcrumb = () => {
     const activeDimensions = Object.entries(selections)
@@ -177,20 +239,8 @@ const Index = () => {
   // Generate chart title
   const chartTitle = getChartTitle(dataType, selections);
 
-  // Handle navigation to advanced filters
-  const handleAdvancedFiltersClick = () => {
-    if (!visualizationData) {
-      toast.warning("Please apply filters first to see available columns");
-      return;
-    }
-    
-    // Store current data type and data in localStorage
-    localStorage.setItem('currentDataType', dataType);
-    localStorage.setItem('currentColumns', JSON.stringify(Object.keys(visualizationData[0] || {})));
-    
-    // Navigate to advanced filters
-    navigate('/advanced-filters');
-  };
+  // Filtered data
+  const filteredData = getFilteredData();
 
   return (
     <div className="container py-8 px-4 mx-auto max-w-7xl">
@@ -201,7 +251,7 @@ const Index = () => {
       </p>
       
       {/* Data Type Tabs */}
-      <div className="grid grid-cols-3 gap-2 mb-6">
+      <div className="grid grid-cols-2 gap-2 mb-6">
         <Button 
           onClick={() => handleDataTypeChange('sales')}
           variant={dataType === 'sales' ? 'default' : 'outline'}
@@ -215,15 +265,6 @@ const Index = () => {
           className="py-6"
         >
           📦 Inventory Data
-        </Button>
-        <Button 
-          onClick={handleAdvancedFiltersClick}
-          variant="secondary"
-          className="py-6"
-          disabled={!visualizationData}
-        >
-          <SlidersHorizontal className="mr-2 h-5 w-5" />
-          Advanced Filters
         </Button>
       </div>
       
@@ -318,11 +359,109 @@ const Index = () => {
       
       {/* Data Visualization */}
       <DataVisualization 
-        data={visualizationData} 
+        data={filteredData} 
         chartType={chartType}
         dataType={dataType}
         title={chartTitle}
       />
+      
+      {/* Advanced Column Filters - only shown if data is available */}
+      {visualizationData && visualizationData.length > 0 && (
+        <div className="mt-8">
+          <Collapsible>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">
+                <i className="mr-2">🔍</i> Advanced Column Filters
+              </h2>
+              <CollapsibleTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Filter className="mr-2 h-4 w-4" />
+                  {showColumnFilters ? "Hide Filters" : "Show Filters"}
+                </Button>
+              </CollapsibleTrigger>
+            </div>
+            
+            <CollapsibleContent>
+              <div className="bg-slate-50 p-4 rounded-lg mb-6">
+                <Tabs defaultValue="select">
+                  <TabsList className="mb-4">
+                    <TabsTrigger value="select">Selection Filters</TabsTrigger>
+                    <TabsTrigger value="search">Search Filters</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="select">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {availableColumns.map(column => {
+                        const uniqueValues = getUniqueValues(column);
+                        if (uniqueValues.length <= 15) { // Only show select for columns with few unique values
+                          return (
+                            <div key={column} className="mb-4">
+                              <label className="block text-sm font-medium mb-2">
+                                Filter by {column}
+                              </label>
+                              <Select 
+                                value={columnFilterValues[column] || ""}
+                                onValueChange={(value) => handleColumnFilterChange(column, value)}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder={`All ${column} values`} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="">All</SelectItem>
+                                  {uniqueValues.map(value => (
+                                    <SelectItem key={value} value={value}>
+                                      {value}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })}
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="search">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {availableColumns.map(column => (
+                        <div key={column} className="mb-4">
+                          <label htmlFor={`filter-${column}`} className="block text-sm font-medium mb-2">
+                            Search in {column}
+                          </label>
+                          <input
+                            id={`filter-${column}`}
+                            type="text"
+                            value={columnFilterValues[column] || ''}
+                            onChange={(e) => handleColumnFilterChange(column, e.target.value)}
+                            placeholder={`Search in ${column}...`}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </div>
+              
+              <div className="flex justify-between items-center mb-4">
+                <div className="text-sm text-gray-600">
+                  {filteredData && visualizationData ? 
+                    `Showing ${filteredData.length} of ${visualizationData.length} records` : 
+                    'No data available'}
+                </div>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setColumnFilterValues({})}
+                >
+                  Reset Filters
+                </Button>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
+      )}
       
       {/* Selected Dimensions Summary */}
       <hr className="my-8" />
